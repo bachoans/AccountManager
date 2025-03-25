@@ -1,0 +1,176 @@
+﻿@page "/accounts/create"
+@page "/accounts/edit/{Id:int}"
+
+@inject AccountApiService AccountService
+@inject SubscriptionApiService SubscriptionService
+@inject NavigationManager Navigation
+
+<h3>@(IsEdit ? "Edit Account" : "Create New Account")</h3>
+
+@if (account == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="account" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>Company Name *</label>
+            <InputText class="form-control" @bind-Value="account.CompanyName" />
+        </div>
+
+        <div class="mb-3">
+            <label>Country</label>
+            <InputText class="form-control" @bind-Value="account.Country" />
+        </div>
+
+        <div class="form-check mb-2">
+            <InputCheckbox class="form-check-input" @bind-Value="account.Is2FAEnabled" />
+            <label class="form-check-label">2FA Enabled</label>
+        </div>
+
+        <div class="form-check mb-2">
+            <InputCheckbox class="form-check-input" @bind-Value="account.IsIPFilterEnabled" />
+            <label class="form-check-label">IP Filter Enabled</label>
+        </div>
+
+        <div class="form-check mb-2">
+            <InputCheckbox class="form-check-input" @bind-Value="account.IsSessionTimeoutEnabled" />
+            <label class="form-check-label">Session Timeout Enabled</label>
+        </div>
+
+        <div class="mb-3">
+            <label>Session Timeout (min)</label>
+            <InputNumber class="form-control" @bind-Value="account.SessionTimeOut" />
+        </div>
+
+        <div class="mb-3">
+            <label>Time Zone</label>
+            <InputText class="form-control" @bind-Value="account.LocalTimeZone" />
+        </div>
+
+        <div class="mb-3">
+            <label>Subscription *</label>
+            <InputSelect class="form-select" @bind-Value="account.SubscriptionId">
+                <option value="">-- Select a subscription --</option>
+                @foreach (var sub in subscriptions)
+                {
+                    <option value="@sub.SubscriptionId">@sub.Description</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-check mb-3">
+            <InputCheckbox class="form-check-input" @bind-Value="account.IsActive" />
+            <label class="form-check-label">Is Active</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">@SubmitLabel</button>
+    </EditForm>
+
+    <!-- 🔽 Inline Add Subscription Section -->
+    <div class="mt-5">
+        <h5>Add New Subscription</h5>
+        <EditForm Model="newSubscription" OnValidSubmit="AddSubscriptionInline">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-2">
+                <label>Description</label>
+                <InputText class="form-control" @bind-Value="newSubscription.Description" />
+            </div>
+
+            <div class="form-check mb-1">
+                <InputCheckbox class="form-check-input" @bind-Value="newSubscription.Is2FAAllowed" />
+                <label class="form-check-label">2FA Allowed</label>
+            </div>
+
+            <div class="form-check mb-1">
+                <InputCheckbox class="form-check-input" @bind-Value="newSubscription.IsIPFilterAllowed" />
+                <label class="form-check-label">IP Filter Allowed</label>
+            </div>
+
+            <div class="form-check mb-3">
+                <InputCheckbox class="form-check-input" @bind-Value="newSubscription.IsSessionTimeoutAllowed" />
+                <label class="form-check-label">Session Timeout Allowed</label>
+            </div>
+
+            <button class="btn btn-sm btn-success" type="submit">Add Subscription</button>
+        </EditForm>
+    </div>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private Shared.DTOs.SaveAccountDto? account;
+    private Shared.DTOs.SaveSubscriptionDto newSubscription = new();
+    private List<Shared.DTOs.SubscriptionDto> subscriptions = new();
+
+    private bool IsEdit => Id.HasValue;
+    private string SubmitLabel => IsEdit ? "Update" : "Create";
+
+    protected override async Task OnInitializedAsync()
+    {
+        subscriptions = await SubscriptionService.GetSubscriptionsAsync();
+
+        if (IsEdit)
+        {
+            var result = await AccountService.GetByIdAsync(Id.Value);
+            if (result != null)
+            {
+                account = new Shared.DTOs.SaveAccountDto
+                    {
+                        AccountId = Id.Value,
+                        CompanyName = result.CompanyName,
+                        Country = result.Country,
+                        Is2FAEnabled = result.Is2FAEnabled,
+                        IsIPFilterEnabled = result.IsIPFilterEnabled,
+                        IsSessionTimeoutEnabled = result.IsSessionTimeoutEnabled,
+                        SessionTimeOut = result.SessionTimeOut,
+                        LocalTimeZone = result.LocalTimeZone,
+                        SubscriptionId = result.SubscriptionId,
+                        IsActive = result.IsActive
+                    };
+            }
+            else
+            {
+                Navigation.NavigateTo("/accounts");
+            }
+        }
+        else
+        {
+            account = new Shared.DTOs.SaveAccountDto();
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (IsEdit)
+        {
+            await AccountService.UpdateAsync(Id!.Value, account!);
+        }
+        else
+        {
+            await AccountService.CreateAsync(account!);
+        }
+
+        Navigation.NavigateTo("/accounts");
+    }
+
+    private async Task AddSubscriptionInline()
+    {
+        await SubscriptionService.AddSubscriptionAsync(newSubscription);
+        newSubscription = new Shared.DTOs.SaveSubscriptionDto();
+
+        subscriptions = await SubscriptionService.GetSubscriptionsAsync();
+
+        // Optional: auto-select last one
+        var last = subscriptions.LastOrDefault();
+        if (last != null)
+            account!.SubscriptionId = last.SubscriptionId;
+    }
+}

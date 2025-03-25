@@ -1,0 +1,95 @@
+﻿@page "/subscriptions"
+@inject SubscriptionApiService SubscriptionService
+
+<h3>Subscriptions</h3>
+
+<!-- Add Form -->
+<EditForm Model="newSubscription" OnValidSubmit="AddSubscriptionAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Description</label>
+        <InputText class="form-control" @bind-Value="newSubscription.Description" />
+    </div>
+
+    <div class="form-check mb-2">
+        <InputCheckbox class="form-check-input" @bind-Value="newSubscription.Is2FAAllowed" />
+        <label class="form-check-label">2FA Allowed</label>
+    </div>
+
+    <div class="form-check mb-2">
+        <InputCheckbox class="form-check-input" @bind-Value="newSubscription.IsIPFilterAllowed" />
+        <label class="form-check-label">IP Filter Allowed</label>
+    </div>
+
+    <div class="form-check mb-2">
+        <InputCheckbox class="form-check-input" @bind-Value="newSubscription.IsSessionTimeoutAllowed" />
+        <label class="form-check-label">Session Timeout Allowed</label>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-2">Add Subscription</button>
+</EditForm>
+
+<hr />
+
+<!-- Subscriptions List -->
+@if (subscriptions == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!subscriptions.Any())
+{
+    <p>No subscriptions found.</p>
+}
+else
+{
+    <table class="table table-bordered mt-4">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>2FA</th>
+                <th>IP Filter</th>
+                <th>Timeout</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sub in subscriptions)
+            {
+                <tr>
+                    <td>@sub.Description</td>
+                    <td>@(sub.Is2FAAllowed ? "Yes" : "No")</td>
+                    <td>@(sub.IsIPFilterAllowed ? "Yes" : "No")</td>
+                    <td>@(sub.IsSessionTimeoutAllowed ? "Yes" : "No")</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteSubscription(sub.SubscriptionId)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Shared.DTOs.SubscriptionDto>? subscriptions;
+    private Shared.DTOs.SaveSubscriptionDto newSubscription = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        subscriptions = await SubscriptionService.GetSubscriptionsAsync();
+    }
+
+    private async Task AddSubscriptionAsync()
+    {
+        await SubscriptionService.AddSubscriptionAsync(newSubscription);
+        newSubscription = new Shared.DTOs.SaveSubscriptionDto();
+        subscriptions = await SubscriptionService.GetSubscriptionsAsync();
+    }
+
+    private async Task DeleteSubscription(int id)
+    {
+        await SubscriptionService.DeleteSubscriptionAsync(id);
+        subscriptions = await SubscriptionService.GetSubscriptionsAsync();
+    }
+}

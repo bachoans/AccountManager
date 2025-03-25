@@ -1,0 +1,92 @@
+﻿@page "/accounts"
+@inject AccountApiService AccountService
+@inject NavigationManager Navigation
+
+<h3>Accounts</h3>
+
+<input @bind="searchText" placeholder="Search by company name" class="form-control mb-3" />
+<button class="btn btn-primary mb-3" @onclick="Search">Search</button>
+
+<button class="btn btn-success mb-3 ms-2" @onclick="@(() => MethodToTriggerUrl(createUrl))">Create New Account</button>
+
+
+@if (accounts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!accounts.Any())
+{
+    <p>No accounts found.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>Token</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var acc in accounts)
+            {
+                <tr>
+                    <td>@acc.CompanyName</td>
+                    <td>@acc.Token</td>
+                    <td>@(acc.IsActive ? "Enabled" : "Disabled")</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" @onclick="() => Toggle(acc.AccountId, !acc.IsActive)">
+                            @(acc.IsActive ? "Disable" : "Enable")
+                        </button>
+                        <button class="btn btn-sm btn-danger ms-2" @onclick="() => Delete(acc.AccountId)">Delete</button>
+                        <button class="btn btn-sm btn-primary ms-2" @onclick="() => NavigateToEdit(acc.AccountId)">Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Shared.DTOs.AccountDto>? accounts;
+    private string createUrl = "/accounts/create";
+    private string editUrl = "/accounts/edit/";
+    private string searchText = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        accounts = await AccountService.GetAccountsAsync();
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+            accounts = await AccountService.GetAccountsAsync();
+        else
+            accounts = await AccountService.SearchAccountsAsync(searchText);
+    }
+
+    private async Task Toggle(int id, bool active)
+    {
+        await AccountService.ToggleAsync(id, active);
+        accounts = await AccountService.GetAccountsAsync();
+    }
+
+    private async Task Delete(int id)
+    {
+        await AccountService.DeleteAsync(id);
+        accounts = await AccountService.GetAccountsAsync();
+    }
+
+    private void MethodToTriggerUrl(string url)
+    {
+        Navigation.NavigateTo(url);
+    }
+
+    private void NavigateToEdit(int accountId)
+    {
+        Navigation.NavigateTo(editUrl + accountId.ToString());
+    }
+}
