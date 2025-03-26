@@ -1,8 +1,10 @@
 ﻿@page "/accounts/create"
 @page "/accounts/edit/{Id:int}"
+@using AccountManager.Shared.DTOs
 
 @inject AccountApiService AccountService
 @inject SubscriptionApiService SubscriptionService
+@inject SubscriptionStatusApiService StatusService
 @inject NavigationManager Navigation
 
 <h3>@(IsEdit ? "Edit Account" : "Create New Account")</h3>
@@ -54,11 +56,21 @@ else
 
         <div class="mb-3">
             <label>Subscription *</label>
-            <InputSelect class="form-select" @bind-Value="account.SubscriptionId">
+            <InputSelect class="form-select" @bind-Value="account.SubscriptionId" @onchange="OnSubscriptionChanged">
                 <option value="">-- Select a subscription --</option>
                 @foreach (var sub in subscriptions)
                 {
                     <option value="@sub.SubscriptionId">@sub.Description</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Subscription Status</label>
+            <InputSelect class="form-select" @bind-Value="account.SubscriptionStatusId">
+                <option value="">-- Select status --</option>
+                @foreach (var status in subscriptionStatuses)
+                {
+                    <option value="@status.SubscriptionStatusId">@status.Description</option>
                 }
             </InputSelect>
         </div>
@@ -71,44 +83,15 @@ else
         <button type="submit" class="btn btn-primary">@SubmitLabel</button>
     </EditForm>
 
-    <!-- 🔽 Inline Add Subscription Section -->
-    <div class="mt-5">
-        <h5>Add New Subscription</h5>
-        <EditForm Model="newSubscription" OnValidSubmit="AddSubscriptionInline">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <div class="mb-2">
-                <label>Description</label>
-                <InputText class="form-control" @bind-Value="newSubscription.Description" />
-            </div>
-
-            <div class="form-check mb-1">
-                <InputCheckbox class="form-check-input" @bind-Value="newSubscription.Is2FAAllowed" />
-                <label class="form-check-label">2FA Allowed</label>
-            </div>
-
-            <div class="form-check mb-1">
-                <InputCheckbox class="form-check-input" @bind-Value="newSubscription.IsIPFilterAllowed" />
-                <label class="form-check-label">IP Filter Allowed</label>
-            </div>
-
-            <div class="form-check mb-3">
-                <InputCheckbox class="form-check-input" @bind-Value="newSubscription.IsSessionTimeoutAllowed" />
-                <label class="form-check-label">Session Timeout Allowed</label>
-            </div>
-
-            <button class="btn btn-sm btn-success" type="submit">Add Subscription</button>
-        </EditForm>
-    </div>
 }
 
 @code {
     [Parameter] public int? Id { get; set; }
 
-    private Shared.DTOs.SaveAccountDto? account;
-    private Shared.DTOs.SaveSubscriptionDto newSubscription = new();
-    private List<Shared.DTOs.SubscriptionDto> subscriptions = new();
+    private SaveAccountDto? account;
+    private SaveSubscriptionDto newSubscription = new();
+    private List<SubscriptionDto> subscriptions = new();
+    private List<SubscriptionStatusDto> subscriptionStatuses = new();
 
     private bool IsEdit => Id.HasValue;
     private string SubmitLabel => IsEdit ? "Update" : "Create";
@@ -116,13 +99,14 @@ else
     protected override async Task OnInitializedAsync()
     {
         subscriptions = await SubscriptionService.GetSubscriptionsAsync();
+        subscriptionStatuses = await StatusService.GetStatusesAsync();
 
         if (IsEdit)
         {
             var result = await AccountService.GetByIdAsync(Id.Value);
             if (result != null)
             {
-                account = new Shared.DTOs.SaveAccountDto
+                account = new SaveAccountDto
                     {
                         AccountId = Id.Value,
                         CompanyName = result.CompanyName,
@@ -133,6 +117,7 @@ else
                         SessionTimeOut = result.SessionTimeOut,
                         LocalTimeZone = result.LocalTimeZone,
                         SubscriptionId = result.SubscriptionId,
+                        SubscriptionStatusId = result.SubscriptionStatusId,
                         IsActive = result.IsActive
                     };
             }
@@ -164,7 +149,7 @@ else
     private async Task AddSubscriptionInline()
     {
         await SubscriptionService.AddSubscriptionAsync(newSubscription);
-        newSubscription = new Shared.DTOs.SaveSubscriptionDto();
+        newSubscription = new SaveSubscriptionDto();
 
         subscriptions = await SubscriptionService.GetSubscriptionsAsync();
 
@@ -172,5 +157,19 @@ else
         var last = subscriptions.LastOrDefault();
         if (last != null)
             account!.SubscriptionId = last.SubscriptionId;
+    }
+
+    private async Task OnSubscriptionChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            var selectedSub = await SubscriptionService.GetByIdAsync(id);
+            if (selectedSub != null)
+            {
+                account.Is2FAEnabled = selectedSub.Is2FAAllowed;
+                account.IsIPFilterEnabled = selectedSub.IsIPFilterAllowed;
+                account.IsSessionTimeoutEnabled = selectedSub.IsSessionTimeoutAllowed;
+            }
+        }
     }
 }

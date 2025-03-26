@@ -17,6 +17,11 @@ namespace AccountManager.Client.Services
             return await _http.GetFromJsonAsync<List<SubscriptionDto>>("api/subscriptions");
         }
 
+        public async Task<SubscriptionDto?> GetByIdAsync(int id)
+        {
+            return await _http.GetFromJsonAsync<SubscriptionDto>($"api/subscriptions/{id}");
+        }
+
         public async Task AddSubscriptionAsync(SaveSubscriptionDto dto)
         {
             await _http.PostAsJsonAsync("api/subscriptions", dto);

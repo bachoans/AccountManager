@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 namespace AccountManager.Shared.DTOs
 {
     /// <summary>
-    /// Represents a generic dropdown option (used in UI).
+    /// Represents a status label for a subscription (e.g. Active, Cancelled).
     /// </summary>
-    public class DropdownOptionDto
+    public class SubscriptionStatusDto
     {
-        public int Id { get; set; }
-        public string Text { get; set; }
+        public int SubscriptionStatusId { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 }

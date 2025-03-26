@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using AccountManager.Data.Entities;
 using AccountManager.Shared.DTOs;
 
 namespace AccountManager.Client.Services
@@ -47,5 +48,10 @@ namespace AccountManager.Client.Services
             return await _http.GetFromJsonAsync<List<AccountDto>>($"api/accounts/search?name={Uri.EscapeDataString(name)}");
         }
 
+        public async Task<List<AccountChangesLog>> GetLogsAsync(int accountId)
+        {
+            return await _http.GetFromJsonAsync<List<AccountChangesLog>>($"api/accountlogs/{accountId}")
+                   ?? new List<AccountChangesLog>();
+        }
     }
 }

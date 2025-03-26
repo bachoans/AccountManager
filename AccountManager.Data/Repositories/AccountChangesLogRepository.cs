@@ -1,35 +1,28 @@
-﻿using AccountManager.Data.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using AccountManager.Data.Entities;
 using AccountManager.Data.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using AccountManager.Data;
 
-namespace AccountManager.Data.Repositories
+public class AccountChangesLogRepository : IAccountChangesLogRepository
 {
-    public class AccountChangesLogRepository : IAccountChangesLogRepository
+    private readonly AppDbContext _context;
+
+    public AccountChangesLogRepository(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public AccountChangesLogRepository(AppDbContext context)
-        {
-            _context = context;
-        }
+    public Task<List<AccountChangesLog>> GetLogsByAccountIdAsync(int accountId)
+    {
+        return _context.AccountChangesLogs
+                       .Where(x => x.AccountId == accountId)
+                       .OrderByDescending(x => x.Timestamp)
+                       .ToListAsync();
+    }
 
-        public async Task LogChangeAsync(AccountChangesLog log)
-        {
-            _context.AccountChangesLogs.Add(log);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<List<AccountChangesLog>> GetLogsByAccountIdAsync(int accountId)
-        {
-            return await _context.AccountChangesLogs
-                .Where(l => l.AccountId == accountId)
-                .OrderByDescending(l => l.Timestamp)
-                .ToListAsync();
-        }
+    public async Task LogChangeAsync(AccountChangesLog log)
+    {
+        await _context.AccountChangesLogs.AddAsync(log);
+        await _context.SaveChangesAsync();
     }
 }

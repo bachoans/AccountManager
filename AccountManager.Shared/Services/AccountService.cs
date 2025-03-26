@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace AccountManager.Shared.Services
 {
+    /// <summary>
+    /// Handles all business logic related to accounts.
+    /// </summary>
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _repo;
@@ -20,15 +23,30 @@ namespace AccountManager.Shared.Services
             _logService = logService;
         }
 
+        /// <summary>
+        /// Returns all accounts from the database.
+        /// </summary>
         public Task<List<Account>> GetAllAccountsAsync() => _repo.GetAllAsync();
 
+        /// <summary>
+        /// Gets a single account by its ID.
+        /// </summary>
         public Task<Account?> GetAccountByIdAsync(int id) => _repo.GetByIdAsync(id);
 
+        /// <summary>
+        /// Searches for accounts by company name.
+        /// </summary>
         public Task<List<Account>> SearchAccountsAsync(string companyName) =>
             _repo.SearchByCompanyNameAsync(companyName);
 
+        /// <summary>
+        /// Creates a new account.
+        /// </summary>
         public Task CreateAccountAsync(Account account) => _repo.AddAsync(account);
 
+        /// <summary>
+        /// Updates an existing account and logs all changes.
+        /// </summary>
         public async Task UpdateAccountAsync(Account updated)
         {
             var existing = await _repo.GetByIdAsync(updated.AccountId);
@@ -43,7 +61,6 @@ namespace AccountManager.Shared.Services
             await TrackAndLogChange("LocalTimeZone", existing.LocalTimeZone, updated.LocalTimeZone, existing.AccountId);
             await TrackAndLogChange("IsActive", existing.IsActive, updated.IsActive, existing.AccountId);
 
-            // Apply updates
             existing.CompanyName = updated.CompanyName;
             existing.Country = updated.Country;
             existing.Is2FAEnabled = updated.Is2FAEnabled;
@@ -56,7 +73,9 @@ namespace AccountManager.Shared.Services
             await _repo.UpdateAsync(existing);
         }
 
-
+        /// <summary>
+        /// Deletes an account by its ID.
+        /// </summary>
         public async Task DeleteAccountAsync(int accountId)
         {
             var account = await _repo.GetByIdAsync(accountId);
@@ -66,6 +85,9 @@ namespace AccountManager.Shared.Services
             }
         }
 
+        /// <summary>
+        /// Enables or disables an account and logs the change.
+        /// </summary>
         public async Task ToggleAccountStatusAsync(int accountId, bool isActive)
         {
             var account = await _repo.GetByIdAsync(accountId);
@@ -79,6 +101,9 @@ namespace AccountManager.Shared.Services
             }
         }
 
+        /// <summary>
+        /// Helper method for logging changes to fields.
+        /// </summary>
         private async Task TrackAndLogChange<T>(string field, T oldValue, T newValue, int accountId)
         {
             if (!Equals(oldValue, newValue))

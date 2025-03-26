@@ -32,14 +32,17 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IAccountLogService, AccountLogService>();
+builder.Services.AddScoped<IAccountSubscriptionStatusService, AccountSubscriptionStatusService>();
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountSubscriptionRepository, AccountSubscriptionRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IAccountChangesLogRepository, AccountChangesLogRepository>();
+builder.Services.AddScoped<IAccountSubscriptionStatusRepository, AccountSubscriptionStatusRepository>();
 
 builder.Services.AddScoped<AccountApiService>();
 builder.Services.AddScoped<SubscriptionApiService>();
+builder.Services.AddScoped<SubscriptionStatusApiService>();
 
 builder.Services.AddHttpClient();
 

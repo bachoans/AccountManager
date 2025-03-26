@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 
 namespace AccountManager.Data.Interfaces
 {
-    public interface IAccountChangesLogRepository
+    public interface IAccountSubscriptionStatusRepository
     {
-        Task<List<AccountChangesLog>> GetLogsByAccountIdAsync(int accountId);
-        Task LogChangeAsync(AccountChangesLog log);
+        Task<List<AccountSubscriptionStatus>> GetAllAsync();
     }
 }

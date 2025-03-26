@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace AccountManager.Shared.Services
 {
+    /// <summary>
+    /// Handles logging of account changes and retrieving change history.
+    /// </summary>
     public class AccountLogService : IAccountLogService
     {
         private readonly IAccountChangesLogRepository _logRepo;
@@ -18,9 +21,15 @@ namespace AccountManager.Shared.Services
             _logRepo = logRepo;
         }
 
+        /// <summary>
+        /// Gets the list of changes for the given account.
+        /// </summary>
         public Task<List<AccountChangesLog>> GetAccountLogsAsync(int accountId) =>
             _logRepo.GetLogsByAccountIdAsync(accountId);
 
+        /// <summary>
+        /// Logs a change to a specific field of an account.
+        /// </summary>
         public Task LogChangeAsync(int accountId, string field, string? oldValue, string? newValue)
         {
             var log = new AccountChangesLog

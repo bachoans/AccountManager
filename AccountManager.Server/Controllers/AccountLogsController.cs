@@ -18,7 +18,7 @@ namespace AccountManager.Server.Controllers
         }
 
         [HttpGet("{accountId}")]
-        public async Task<IActionResult> GetLogs(int accountId)
+        public async Task<ActionResult<List<AccountChangesLog>>> GetLogs(int accountId)
         {
             var logs = await _logService.GetAccountLogsAsync(accountId);
             return Ok(logs);

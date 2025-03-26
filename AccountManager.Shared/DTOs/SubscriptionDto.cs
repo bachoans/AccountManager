@@ -7,13 +7,18 @@ using System.Threading.Tasks;
 
 namespace AccountManager.Shared.DTOs
 {
+    /// <summary>
+    /// Represents a subscription plan with all properties.
+    /// </summary>
     public class SubscriptionDto
     {
         public int SubscriptionId { get; set; }
         public string? Description { get; set; }
+
         public bool IsActive { get; set; }
         public bool IsDefault { get; set; }
         public bool AvailableYearly { get; set; }
+
         public bool Is2FAAllowed { get; set; }
         public bool IsIPFilterAllowed { get; set; }
         public bool IsSessionTimeoutAllowed { get; set; }

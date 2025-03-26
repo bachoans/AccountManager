@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace AccountManager.Shared.DTOs
 {
+    /// <summary>
+    /// Represents data used to create a new subscription plan.
+    /// </summary>
     public class SaveSubscriptionDto
     {
         [Required]

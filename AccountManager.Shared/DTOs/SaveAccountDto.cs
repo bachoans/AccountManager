@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace AccountManager.Shared.DTOs
 {
+    /// <summary>
+    /// Represents data used for creating or updating an account.
+    /// </summary>
     public class SaveAccountDto
     {
         public int? AccountId { get; set; }
@@ -28,7 +31,8 @@ namespace AccountManager.Shared.DTOs
         [Required(ErrorMessage = "Subscription is required")]
         public int SubscriptionId { get; set; }
 
-        public int SubscriptionStatusId { get; set; } = 1;
+        /// <summary>Optional status of the subscription. Default is 1 (Active).</summary>
+        public int? SubscriptionStatusId { get; set; } = 1;
 
         public bool IsActive { get; set; } = true;
     }

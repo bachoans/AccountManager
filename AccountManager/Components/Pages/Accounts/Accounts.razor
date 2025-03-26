@@ -42,6 +42,7 @@ else
                         </button>
                         <button class="btn btn-sm btn-danger ms-2" @onclick="() => Delete(acc.AccountId)">Delete</button>
                         <button class="btn btn-sm btn-primary ms-2" @onclick="() => NavigateToEdit(acc.AccountId)">Edit</button>
+                        <button class="btn btn-sm btn-info ms-2" @onclick="() => NavigateToLog(acc.AccountId)">Logs</button>
                     </td>
                 </tr>
             }
@@ -53,6 +54,7 @@ else
     private List<Shared.DTOs.AccountDto>? accounts;
     private string createUrl = "/accounts/create";
     private string editUrl = "/accounts/edit/";
+    private string logsUrl = "/accounts/logs/";
     private string searchText = "";
 
     protected override async Task OnInitializedAsync()
@@ -88,5 +90,10 @@ else
     private void NavigateToEdit(int accountId)
     {
         Navigation.NavigateTo(editUrl + accountId.ToString());
+    }
+
+    private void NavigateToLog(int accountId)
+    {
+        Navigation.NavigateTo(logsUrl + accountId.ToString());
     }
 }

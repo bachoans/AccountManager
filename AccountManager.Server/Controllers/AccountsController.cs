@@ -32,11 +32,32 @@ namespace AccountManager.Server.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Account>> GetById(int id)
+        public async Task<ActionResult<AccountDto>> GetById(int id)
         {
             var account = await _accountService.GetAccountByIdAsync(id);
             if (account == null) return NotFound();
-            return Ok(account);
+
+            var subscription = await _subscriptionService.GetAccountSubscriptionAsync(account.AccountId);
+
+            var dto = new AccountDto
+            {
+                AccountId = account.AccountId,
+                Token = account.Token,
+                CompanyName = account.CompanyName,
+                Country = account.Country,
+                Is2FAEnabled = account.Is2FAEnabled,
+                IsIPFilterEnabled = account.IsIPFilterEnabled,
+                IsSessionTimeoutEnabled = account.IsSessionTimeoutEnabled,
+                SessionTimeOut = account.SessionTimeOut,
+                LocalTimeZone = account.LocalTimeZone,
+                IsActive = account.IsActive,
+                CreatedAt = account.CreatedAt,
+                SubscriptionId = subscription?.SubscriptionId ?? 0,
+                SubscriptionStatusId = subscription?.SubscriptionStatusId ?? 0,
+                SubscriptionStatusName = subscription?.AccountSubscriptionStatus?.Description
+            };
+
+            return Ok(dto);
         }
 
         [HttpGet("search")]
@@ -70,8 +91,8 @@ namespace AccountManager.Server.Controllers
             {
                 AccountId = account.AccountId,
                 SubscriptionId = dto.SubscriptionId,
-                SubscriptionStatusId = dto.SubscriptionStatusId,
-                Is2FAAllowed = true, // Default logic can go here
+                SubscriptionStatusId = dto.SubscriptionStatusId.Value,
+                Is2FAAllowed = true,
                 IsIPFilterAllowed = true,
                 IsSessionTimeoutAllowed = true
             };
@@ -105,8 +126,12 @@ namespace AccountManager.Server.Controllers
                 await _logService.LogChangeAsync(id, "LocalTimeZone", existing.LocalTimeZone, dto.LocalTimeZone);
             if (existing.IsActive != dto.IsActive)
                 await _logService.LogChangeAsync(id, "IsActive", existing.IsActive.ToString(), dto.IsActive.ToString());
-            //TODO: Log Subscription change
-            
+            var existingSubscription = await _subscriptionService.GetAccountSubscriptionAsync(id);
+            if (existingSubscription?.SubscriptionStatusId != dto.SubscriptionStatusId)
+            {
+                await _logService.LogChangeAsync(id, "SubscriptionStatusId", existingSubscription?.SubscriptionStatusId.ToString(), dto.SubscriptionStatusId?.ToString());
+            }
+
             existing.CompanyName = dto.CompanyName;
             existing.Country = dto.Country;
             existing.Is2FAEnabled = dto.Is2FAEnabled;
@@ -122,7 +147,7 @@ namespace AccountManager.Server.Controllers
             {
                 AccountId = id,
                 SubscriptionId = dto.SubscriptionId,
-                SubscriptionStatusId = dto.SubscriptionStatusId,
+                SubscriptionStatusId = dto.SubscriptionStatusId.Value,
                 Is2FAAllowed = true,
                 IsIPFilterAllowed = true,
                 IsSessionTimeoutAllowed = true

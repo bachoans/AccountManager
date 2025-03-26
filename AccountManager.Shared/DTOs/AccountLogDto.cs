@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace AccountManager.Shared.DTOs
 {
+    /// <summary>
+    /// Represents a change made to an account, used in change log display.
+    /// </summary>
     public class AccountLogDto
     {
         public string ChangedField { get; set; }

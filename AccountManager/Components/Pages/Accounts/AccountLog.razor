@@ -1,0 +1,52 @@
+﻿@page "/accounts/logs/{Id:int}"
+@inject AccountApiService AccountService
+@inject NavigationManager Navigation
+@using AccountManager.Data.Entities
+@using System.Globalization
+
+<h3>Change Log</h3>
+<button class="btn btn-secondary mb-3" @onclick="() => Navigation.NavigateTo(createUrl)">Back to List</button>
+
+@if (logs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!logs.Any())
+{
+    <p>No changes found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Old Value</th>
+                <th>New Value</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in logs)
+            {
+                <tr>
+                    <td>@log.ChangedField</td>
+                    <td>@log.OldValue</td>
+                    <td>@log.NewValue</td>
+                    <td>@log.Timestamp.ToLocalTime().ToString("g", CultureInfo.InvariantCulture)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private string createUrl = "/accounts";
+    private List<AccountChangesLog> logs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        logs = await AccountService.GetLogsAsync(Id);
+    }
+}
